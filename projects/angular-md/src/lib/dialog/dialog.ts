@@ -25,7 +25,7 @@ import {
   OverlayState,
   OverlayRef,
   TemplatePortalDirective
-} from '../core/index';
+} from '../core';
 import { extendObject } from '../core/util/object-extend';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';

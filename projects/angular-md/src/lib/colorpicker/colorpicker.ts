@@ -8,7 +8,7 @@ import {
   Directive,
   OnDestroy,
   Optional,
-  Renderer,
+  Renderer2,
   Self,
   TemplateRef,
   ViewChild,
@@ -51,11 +51,11 @@ export class TextDirective {
   changeInput(event: any) {
     event.stopPropagation();
     event.preventDefault();
-    let value = event.target.value;
+    const value = event.target.value;
     if (this.rg === undefined) {
       this.newValue.emit(value);
     } else {
-      let numeric = parseFloat(value);
+      const numeric = parseFloat(value);
       if (!isNaN(numeric) && numeric >= 0 && numeric <= this.rg) {
         this.newValue.emit({ v: numeric, rg: this.rg });
       }
@@ -85,13 +85,13 @@ export class ColorpickerSliderDirective {
 
   /**
    * set cursor position
-   * @param event
+   * @param event -
    */
   setCursor(event: any) {
-    let height = this._getNativeElement().offsetHeight;
-    let width = this._getNativeElement().offsetWidth;
-    let x = Math.max(0, Math.min(this.getX(event), width));
-    let y = Math.max(0, Math.min(this.getY(event), height));
+    const height = this._getNativeElement().offsetHeight;
+    const width = this._getNativeElement().offsetWidth;
+    const x = Math.max(0, Math.min(this.getX(event), width));
+    const y = Math.max(0, Math.min(this.getY(event), height));
 
     if (this.pointX !== undefined && this.pointY !== undefined) {
       this.change.emit({
@@ -107,7 +107,7 @@ export class ColorpickerSliderDirective {
 
   /**
    * input event listner
-   * @param event
+   * @param event -
    */
   move(event: any) {
     event.preventDefault();
@@ -116,7 +116,7 @@ export class ColorpickerSliderDirective {
 
   /**
    * input event listner
-   * @param event
+   * @param event -
    */
   start(event: any) {
     this.setCursor(event);
@@ -138,20 +138,20 @@ export class ColorpickerSliderDirective {
 
   /**
    * get x
-   * @param event
+   * @param event -
    */
   getX(event: any) {
-    let boundingClientRect = this._getNativeElement().getBoundingClientRect();
+    const boundingClientRect = this._getNativeElement().getBoundingClientRect();
     return (event.pageX !== undefined ? event.pageX : event.touches[0].pageX) -
       boundingClientRect.left - window.pageXOffset;
   }
 
   /**
    * get y
-   * @param event
+   * @param event -
    */
   getY(event: any) {
-    let boundingClientRect = this._getNativeElement().getBoundingClientRect();
+    const boundingClientRect = this._getNativeElement().getBoundingClientRect();
     return (event.pageY !== undefined ? event.pageY : event.touches[0].pageY) -
       boundingClientRect.top - window.pageYOffset;
   }
@@ -169,7 +169,7 @@ export class Md2ColorChange {
 }
 
 @Component({
-  
+
   selector: 'md2-colorpicker',
   templateUrl: 'colorpicker.html',
   styleUrls: ['colorpicker.scss'],
@@ -183,51 +183,6 @@ export class Md2ColorChange {
   encapsulation: ViewEncapsulation.None
 })
 export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
-
-  private _portal: TemplatePortal;
-  private _overlayRef: OverlayRef;
-  private _backdropSubscription: Subscription;
-  private _positionSubscription: Subscription;
-
-  _innerValue: string = '';
-  _isColorpickerVisible: boolean;
-  _hueSliderColor: string;
-  slider: SliderPosition;
-  sliderDim: SliderDimension;
-  hsva: Hsva;
-  rgbaText: Rgba;
-  hslaText: Hsla;
-  outputColor: string;
-  alphaColor: string;
-  hexText: string;
-  format: number;
-  backColor: boolean = true;
-
-  private _created: boolean;
-  private _defalutColor: string = '#000000';
-  private _initialColor: string;
-
-  /** Whether or not the overlay panel is open. */
-  private _panelOpen = false;
-  private _color: string = null;
-
-  /** Whether filling out the select is required in the form.  */
-  _required: boolean = false;
-
-  /** Whether the select is disabled.  */
-  private _disabled: boolean = false;
-  isInputFocus: boolean = false;
-
-  /** The placeholder displayed in the trigger of the select. */
-  private _placeholder: string;
-  private _container: Container = 'inline';
-
-  fontColor: string;
-  _isDark: boolean;
-  isInputValidColor: boolean = false;
-
-  _onChange: (value: any) => void = () => { };
-  _onTouched = () => { };
 
   @Input()
   get color() { return this._color; }
@@ -248,12 +203,6 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
   set disabled(value: any) {
     this._disabled = coerceBooleanProperty(value);
   }
-  @Input('format') cFormat: string = 'hex';
-  @Output('colorpickerChange') colorpickerChange = new EventEmitter<string>();
-  /** Event emitted when the selected date has been changed by the user. */
-  @Output() change: EventEmitter<Md2ColorChange> = new EventEmitter<Md2ColorChange>();
-  @Input() tabindex: number = 0;
-  @Input() id: string = 'md2-colorpicker-' + (++nextId);
 
   get value(): any {
     return this._innerValue;
@@ -288,6 +237,68 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
 
   }
 
+  constructor(private _element: ElementRef, private _overlay: Overlay,
+    private _viewContainerRef: ViewContainerRef, private _renderer: Renderer2,
+    private _util: ColorUtil, @Self() @Optional() public _control: NgControl) {
+    this._created = false;
+    if (this._control) {
+      this._control.valueAccessor = this;
+    }
+  }
+
+  /** Whether or not the overlay panel is open. */
+  get panelOpen(): boolean {
+    return this._panelOpen;
+  }
+
+  private _portal: TemplatePortal;
+  private _overlayRef: OverlayRef;
+  private _backdropSubscription: Subscription;
+  private _positionSubscription: Subscription;
+
+  _innerValue = '';
+  _isColorpickerVisible: boolean;
+  _hueSliderColor: string;
+  slider: SliderPosition;
+  sliderDim: SliderDimension;
+  hsva: Hsva;
+  rgbaText: Rgba;
+  hslaText: Hsla;
+  outputColor: string;
+  alphaColor: string;
+  hexText: string;
+  format: number;
+  backColor = true;
+
+  private _created: boolean;
+  private _defalutColor = '#000000';
+  private _initialColor: string;
+
+  /** Whether or not the overlay panel is open. */
+  private _panelOpen = false;
+  private _color: string = null;
+
+  /** Whether filling out the select is required in the form.  */
+  _required = false;
+
+  /** Whether the select is disabled.  */
+  private _disabled = false;
+  isInputFocus = false;
+
+  /** The placeholder displayed in the trigger of the select. */
+  private _placeholder: string;
+  private _container: Container = 'inline';
+
+  fontColor: string;
+  _isDark: boolean;
+  isInputValidColor = false;
+  @Input('format') cFormat = 'hex';
+  @Output('colorpickerChange') colorpickerChange = new EventEmitter<string>();
+  /** Event emitted when the selected date has been changed by the user. */
+  @Output() change: EventEmitter<Md2ColorChange> = new EventEmitter<Md2ColorChange>();
+  @Input() tabindex = 0;
+  @Input() id: string = 'md2-colorpicker-' + (++nextId);
+
   /** Event emitted when the select has been opened. */
   @Output() onOpen: EventEmitter<void> = new EventEmitter<void>();
 
@@ -296,21 +307,10 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
 
   @ViewChild('portal') _templatePortal: TemplateRef<any>;
 
-  constructor(private _element: ElementRef, private _overlay: Overlay,
-    private _viewContainerRef: ViewContainerRef, private _renderer: Renderer,
-    private _util: ColorUtil, @Self() @Optional() public _control: NgControl) {
-    this._created = false;
-    if (this._control) {
-      this._control.valueAccessor = this;
-    }
-  }
+  _onChange: (value: any) => void = () => { };
+  _onTouched = () => { };
 
   ngOnDestroy() { this.destroyPanel(); }
-
-  /** Whether or not the overlay panel is open. */
-  get panelOpen(): boolean {
-    return this._panelOpen;
-  }
 
   /** Toggles the overlay panel open or closed. */
   toggle(): void {
@@ -319,7 +319,7 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
 
   /** Opens the overlay panel. */
   open(): void {
-    let hsva = this._util.stringToHsva(this.color + '');
+    const hsva = this._util.stringToHsva(this.color + '');
     this.isInputFocus = true;
     if (hsva) {
       this.hsva = hsva;
@@ -390,27 +390,27 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
   }
   /**
     * input event listner
-    * @param event
+    * @param event -
     */
   changeInput(event: any) {
-    let value = event.target.value;
+    const value = event.target.value;
     this.colorpickerChange.emit(value);
   }
 
   /**
   * set saturation,lightness,hue,alpha,RGB value
-  * @param val
-  * @param rg
+  * @param val -
+  * @param rg -
   */
   setSaturation(val: { v: number, rg: number }) {
-    let hsla = this._util.hsva2hsla(this.hsva);
+    const hsla = this._util.hsva2hsla(this.hsva);
     hsla.s = val.v / val.rg;
     this.hsva = this._util.hsla2hsva(hsla);
     this.update();
   }
 
   setLightness(val: { v: number, rg: number }) {
-    let hsla = this._util.hsva2hsla(this.hsva);
+    const hsla = this._util.hsva2hsla(this.hsva);
     hsla.l = val.v / val.rg;
     this.hsva = this._util.hsla2hsva(hsla);
     this.update();
@@ -427,19 +427,19 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
   }
 
   setR(val: { v: number, rg: number }) {
-    let rgba = this._util.hsvaToRgba(this.hsva);
+    const rgba = this._util.hsvaToRgba(this.hsva);
     rgba.r = val.v / val.rg;
     this.hsva = this._util.rgbaToHsva(rgba);
     this.update();
   }
   setG(val: { v: number, rg: number }) {
-    let rgba = this._util.hsvaToRgba(this.hsva);
+    const rgba = this._util.hsvaToRgba(this.hsva);
     rgba.g = val.v / val.rg;
     this.hsva = this._util.rgbaToHsva(rgba);
     this.update();
   }
   setB(val: { v: number, rg: number }) {
-    let rgba = this._util.hsvaToRgba(this.hsva);
+    const rgba = this._util.hsvaToRgba(this.hsva);
     rgba.b = val.v / val.rg;
     this.hsva = this._util.rgbaToHsva(rgba);
     this.update();
@@ -454,7 +454,7 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
     this.isInputValidColor = false;
     this.color = this._innerValue;
 
-    if (this._innerValue != this._initialColor) {
+    if (this._innerValue !== this._initialColor) {
       this._emitChangeEvent();
     }
     this.close();
@@ -472,14 +472,14 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
   }
   /**
      * set color
-     * @param value
+     * @param value -
      */
   setColorFromString(value: string) {
     if (!this.isValidColor(value)) {
       value = '#000000';
       this.backColor = false;
     }
-    let hsva = this._util.stringToHsva(value);
+    const hsva = this._util.stringToHsva(value);
     if (hsva !== null) {
       this.hsva = hsva;
     }
@@ -498,9 +498,9 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
    * update color
    */
   update() {
-    let hsla = this._util.hsva2hsla(this.hsva);
-    let rgba = this._util.denormalizeRGBA(this._util.hsvaToRgba(this.hsva));
-    let hueRgba = this._util.denormalizeRGBA(this._util.hsvaToRgba(
+    const hsla = this._util.hsva2hsla(this.hsva);
+    const rgba = this._util.denormalizeRGBA(this._util.hsvaToRgba(this.hsva));
+    const hueRgba = this._util.denormalizeRGBA(this._util.hsvaToRgba(
       new Hsva(this.hsva.h, 1, 1, 1)));
 
     this.alphaColor = 'rgb(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ')';
@@ -512,7 +512,7 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
       this.hexText = this._util.hexText(rgba);
     }
     this.backColor = true;
-    let colorCode = Math.round((this.rgbaText.r * 299 + this.rgbaText.g * 587 +
+    const colorCode = Math.round((this.rgbaText.r * 299 + this.rgbaText.g * 587 +
       this.rgbaText.b * 114) / 1000);
     if (colorCode >= 128 || this.hsva.a < 0.35) {
       this.fontColor = 'black';
@@ -595,7 +595,7 @@ export class Md2Colorpicker implements OnDestroy, ControlValueAccessor {
    */
   private _createOverlay(): void {
     if (!this._overlayRef) {
-      let config = new OverlayState();
+      const config = new OverlayState();
       if (this.container === 'inline') {
         config.positionStrategy = this._createPickerPositionStrategy();
         config.hasBackdrop = true;

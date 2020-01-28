@@ -21,7 +21,7 @@ import {
   PAGE_UP,
   RIGHT_ARROW,
   UP_ARROW
-} from '../core/keyboard/keycodes';
+} from '../core';
 import { DateLocale } from './date-locale';
 import { DateUtil } from './date-util';
 import { slideCalendar } from './datepicker-animations';
@@ -33,7 +33,7 @@ import { MATERIAL_COMPATIBILITY_MODE } from '../core';
  * @docs-private
  */
 @Component({
-  
+
   selector: 'md2-calendar',
   templateUrl: 'calendar.html',
   styleUrls: ['calendar.scss'],
@@ -48,49 +48,13 @@ import { MATERIAL_COMPATIBILITY_MODE } from '../core';
 })
 export class Md2Calendar implements AfterContentInit {
 
-  /** Whether the Week-number should be displayed */
-  @Input() displayWeek: boolean;
-
-  @Input() type: 'date' | 'time' | 'month' | 'datetime' = 'date';
-
-  /** A date representing the period (month or year) to start the calendar in. */
-  @Input() startAt: Date;
-
-  /** Whether the calendar should be started in month or year view. */
-  @Input() startView: 'clock' | 'month' | 'year' = 'month';
-
-  /** The currently selected date. */
-  @Input() selected: Date;
-
-  /** The minimum selectable date. */
-  @Input() minDate: Date;
-
-  /** The maximum selectable date. */
-  @Input() maxDate: Date;
-
-  @Input() timeInterval: number = 1;
-
-  /** A function used to filter which dates are selectable. */
-  @Input() dateFilter: (date: Date) => boolean;
-
-  /** Emits when the currently selected date changes. */
-  @Output() selectedChange = new EventEmitter<Date>();
-
-  /** Date filter for the month and year views. */
-  _dateFilterForViews = (date: Date) => {
-    return !!date &&
-      (!this.dateFilter || this.dateFilter(date)) &&
-      (!this.minDate || this._util.compareDate(date, this.minDate) >= 0) &&
-      (!this.maxDate || this._util.compareDate(date, this.maxDate) <= 0);
-  }
-
   /**
    * The current active date. This determines which time period is shown and which date is
    * highlighted when using keyboard navigation.
    */
   get _activeDate(): Date { return this._clampedActiveDate; }
   set _activeDate(value: Date) {
-    let oldActiveDate = this._clampedActiveDate;
+    const oldActiveDate = this._clampedActiveDate;
     this._clampedActiveDate = this._util.clampDate(value, this.minDate, this.maxDate);
     if (oldActiveDate && this._clampedActiveDate && this._currentView === 'month' &&
       !this._util.isSameMonthAndYear(oldActiveDate, this._clampedActiveDate)) {
@@ -101,11 +65,6 @@ export class Md2Calendar implements AfterContentInit {
       }
     }
   }
-  private _clampedActiveDate: Date;
-
-  /** Whether the calendar is in month view. */
-  _currentView: 'clock' | 'month' | 'year' = 'month';
-  _clockView: 'hour' | 'minute' = 'hour';
 
   /** The label for the current calendar view. */
   get _yearLabel(): string {
@@ -129,10 +88,51 @@ export class Md2Calendar implements AfterContentInit {
     return ('0' + this._locale.getMinutesLabel(this._activeDate)).slice(-2);
   }
 
-  _calendarState: string;
-
   constructor(private _elementRef: ElementRef, private _ngZone: NgZone,
     private _locale: DateLocale, private _util: DateUtil) {
+  }
+
+  /** Whether the Week-number should be displayed */
+  @Input() displayWeek: boolean;
+
+  @Input() type: 'date' | 'time' | 'month' | 'datetime' = 'date';
+
+  /** A date representing the period (month or year) to start the calendar in. */
+  @Input() startAt: Date;
+
+  /** Whether the calendar should be started in month or year view. */
+  @Input() startView: 'clock' | 'month' | 'year' = 'month';
+
+  /** The currently selected date. */
+  @Input() selected: Date;
+
+  /** The minimum selectable date. */
+  @Input() minDate: Date;
+
+  /** The maximum selectable date. */
+  @Input() maxDate: Date;
+
+  @Input() timeInterval = 1;
+
+  /** A function used to filter which dates are selectable. */
+  @Input() dateFilter: (date: Date) => boolean;
+
+  /** Emits when the currently selected date changes. */
+  @Output() selectedChange = new EventEmitter<Date>();
+  private _clampedActiveDate: Date;
+
+  /** Whether the calendar is in month view. */
+  _currentView: 'clock' | 'month' | 'year' = 'month';
+  _clockView: 'hour' | 'minute' = 'hour';
+
+  _calendarState: string;
+
+  /** Date filter for the month and year views. */
+  _dateFilterForViews = (date: Date) => {
+    return !!date &&
+      (!this.dateFilter || this.dateFilter(date)) &&
+      (!this.minDate || this._util.compareDate(date, this.minDate) >= 0) &&
+      (!this.maxDate || this._util.compareDate(date, this.maxDate) <= 0);
   }
 
   ngAfterContentInit() {
@@ -149,7 +149,7 @@ export class Md2Calendar implements AfterContentInit {
 
   /** Handles date selection in the month view. */
   _dateSelected(date: Date): void {
-    if (this.type == 'date') {
+    if (this.type === 'date') {
       if (!this._util.sameDate(date, this.selected)) {
         this.selectedChange.emit(date);
       }
@@ -161,7 +161,7 @@ export class Md2Calendar implements AfterContentInit {
 
   /** Handles month selection in the year view. */
   _monthSelected(month: Date): void {
-    if (this.type == 'month') {
+    if (this.type === 'month') {
       if (!this._util.isSameMonthAndYear(month, this.selected)) {
         this.selectedChange.emit(this._util.getFirstDateOfMonth(month));
       }
@@ -247,9 +247,9 @@ export class Md2Calendar implements AfterContentInit {
   /** Whether the two dates represent the same view in the current view mode (month or year). */
   private _isSameView(date1: Date, date2: Date): boolean {
     return this._currentView === 'month' ?
-      this._util.getYear(date1) == this._util.getYear(date2) &&
-      this._util.getMonth(date1) == this._util.getMonth(date2) :
-      this._util.getYear(date1) == this._util.getYear(date2);
+      this._util.getYear(date1) === this._util.getYear(date2) &&
+      this._util.getMonth(date1) === this._util.getMonth(date2) :
+      this._util.getYear(date1) === this._util.getYear(date2);
   }
 
   /** Handles keydown events on the calendar body when calendar is in month view. */
@@ -349,12 +349,12 @@ export class Md2Calendar implements AfterContentInit {
   private _handleCalendarBodyKeydownInClockView(event: KeyboardEvent): void {
     switch (event.keyCode) {
       case UP_ARROW:
-        this._activeDate = this._clockView == 'hour' ?
+        this._activeDate = this._clockView === 'hour' ?
           this._util.addCalendarHours(this._activeDate, 1) :
           this._util.addCalendarMinutes(this._activeDate, 1);
         break;
       case DOWN_ARROW:
-        this._activeDate = this._clockView == 'hour' ?
+        this._activeDate = this._clockView === 'hour' ?
           this._util.addCalendarHours(this._activeDate, -1) :
           this._util.addCalendarMinutes(this._activeDate, -1);
         break;
@@ -377,7 +377,7 @@ export class Md2Calendar implements AfterContentInit {
   private _prevMonthInSameCol(date: Date): Date {
     // Determine how many months to jump forward given that there are 2 empty slots at the beginning
     // of each year.
-    let increment = this._util.getMonth(date) <= 4 ? -5 :
+    const increment = this._util.getMonth(date) <= 4 ? -5 :
       (this._util.getMonth(date) >= 7 ? -7 : -12);
     return this._util.addCalendarMonths(date, increment);
   }
@@ -389,7 +389,7 @@ export class Md2Calendar implements AfterContentInit {
   private _nextMonthInSameCol(date: Date): Date {
     // Determine how many months to jump forward given that there are 2 empty slots at the beginning
     // of each year.
-    let increment = this._util.getMonth(date) <= 4 ? 7 :
+    const increment = this._util.getMonth(date) <= 4 ? 7 :
       (this._util.getMonth(date) >= 7 ? 5 : 12);
     return this._util.addCalendarMonths(date, increment);
   }
